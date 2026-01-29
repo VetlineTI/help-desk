@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Ticket } from '@/types/ticket';
+import { Ticket, TicketPriority } from '@/types/ticket';
 
 const STORAGE_KEY = 'vetline_tickets';
 
@@ -29,10 +29,10 @@ export function useTickets() {
     return newTicket;
   };
 
-  const assignTicket = (ticketId: string, analistaId: string, analistaNome: string) => {
+  const assignTicket = (ticketId: string, analistaId: string, analistaNome: string, prioridade: TicketPriority) => {
     const updated = tickets.map((t) =>
       t.id === ticketId
-        ? { ...t, analistaId, analistaNome, status: 'em_atendimento' as const }
+        ? { ...t, analistaId, analistaNome, prioridade, status: 'em_atendimento' as const }
         : t
     );
     saveTickets(updated);

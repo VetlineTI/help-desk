@@ -9,6 +9,8 @@ export type TicketCategory =
 
 export type TicketStatus = 'aguardando' | 'em_atendimento' | 'resolvido';
 
+export type TicketPriority = 'baixa' | 'media' | 'alta' | 'urgente';
+
 export interface Ticket {
   id: string;
   assunto: string;
@@ -17,6 +19,7 @@ export interface Ticket {
   anexo?: string;
   anexoNome?: string;
   status: TicketStatus;
+  prioridade?: TicketPriority;
   criadoEm: string;
   analistaId?: string;
   analistaNome?: string;
@@ -36,6 +39,13 @@ export const CATEGORIAS: TicketCategory[] = [
   'BI',
   'MOB Vendedor',
   'Desktop',
+];
+
+export const PRIORIDADES: { value: TicketPriority; label: string }[] = [
+  { value: 'baixa', label: 'Baixa' },
+  { value: 'media', label: 'Média' },
+  { value: 'alta', label: 'Alta' },
+  { value: 'urgente', label: 'Urgente' },
 ];
 
 export const ANALISTAS: Analista[] = [
