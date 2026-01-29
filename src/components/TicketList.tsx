@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,15 +17,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Ticket, ANALISTAS, TicketStatus } from '@/types/ticket';
-import { Clock, CheckCircle, User, Trash2, Download, ListChecks } from 'lucide-react';
+import { Ticket, ANALISTAS, PRIORIDADES, TicketStatus, TicketPriority } from '@/types/ticket';
+import { Clock, CheckCircle, User, Trash2, Download, ListChecks, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface TicketListProps {
   tickets: Ticket[];
   isAdmin?: boolean;
-  onAssign?: (ticketId: string, analistaId: string, analistaNome: string) => void;
+  onAssign?: (ticketId: string, analistaId: string, analistaNome: string, prioridade: TicketPriority) => void;
   onResolve?: (ticketId: string) => void;
   onDelete?: (ticketId: string) => void;
 }
@@ -35,7 +36,29 @@ const statusConfig: Record<TicketStatus, { label: string; variant: 'default' | '
   resolvido: { label: 'Resolvido', variant: 'outline', icon: <CheckCircle className="h-3 w-3" /> },
 };
 
+const priorityConfig: Record<TicketPriority, { label: string; className: string }> = {
+  baixa: { label: 'Baixa', className: 'bg-slate-100 text-slate-700 border-slate-300' },
+  media: { label: 'Média', className: 'bg-blue-100 text-blue-700 border-blue-300' },
+  alta: { label: 'Alta', className: 'bg-orange-100 text-orange-700 border-orange-300' },
+  urgente: { label: 'Urgente', className: 'bg-red-100 text-red-700 border-red-300' },
+};
+
 export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: TicketListProps) {
+  const [selectedAnalista, setSelectedAnalista] = useState<Record<string, string>>({});
+  const [selectedPrioridade, setSelectedPrioridade] = useState<Record<string, TicketPriority>>({});
+
+  const handleAssign = (ticketId: string) => {
+    const analistaId = selectedAnalista[ticketId];
+    const prioridade = selectedPrioridade[ticketId];
+    
+    if (!analistaId || !prioridade) return;
+    
+    const analista = ANALISTAS.find((a) => a.id === analistaId);
+    if (analista && onAssign) {
+      onAssign(ticketId, analista.id, analista.nome, prioridade);
+    }
+  };
+
   if (tickets.length === 0) {
     return (
       <Card>
@@ -61,6 +84,7 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
               <TableHead>Assunto</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Prioridade</TableHead>
               <TableHead>Data</TableHead>
               {isAdmin && <TableHead>Analista</TableHead>}
               {isAdmin && <TableHead className="text-right">Ações</TableHead>}
@@ -69,6 +93,9 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
           <TableBody>
             {tickets.map((ticket) => {
               const status = statusConfig[ticket.status];
+              const priority = ticket.prioridade ? priorityConfig[ticket.prioridade] : null;
+              const canAssign = selectedAnalista[ticket.id] && selectedPrioridade[ticket.id];
+              
               return (
                 <TableRow key={ticket.id}>
                   <TableCell>
@@ -88,6 +115,31 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
                       {status.label}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    {ticket.status === 'aguardando' && isAdmin ? (
+                      <Select
+                        value={selectedPrioridade[ticket.id] || undefined}
+                        onValueChange={(v) => setSelectedPrioridade((prev) => ({ ...prev, [ticket.id]: v as TicketPriority }))}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Prioridade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRIORIDADES.map((p) => (
+                            <SelectItem key={p.value} value={p.value}>
+                              {p.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : priority ? (
+                      <Badge variant="outline" className={priority.className}>
+                        {priority.label}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(ticket.criadoEm), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </TableCell>
@@ -95,15 +147,11 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
                     <TableCell>
                       {ticket.status === 'aguardando' ? (
                         <Select
-                          onValueChange={(v) => {
-                            const analista = ANALISTAS.find((a) => a.id === v);
-                            if (analista && onAssign) {
-                              onAssign(ticket.id, analista.id, analista.nome);
-                            }
-                          }}
+                          value={selectedAnalista[ticket.id] || ''}
+                          onValueChange={(v) => setSelectedAnalista((prev) => ({ ...prev, [ticket.id]: v }))}
                         >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Atribuir a..." />
+                          <SelectTrigger className="w-[160px]">
+                            <SelectValue placeholder="Selecionar..." />
                           </SelectTrigger>
                           <SelectContent>
                             {ANALISTAS.map((analista) => (
@@ -133,6 +181,17 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
                             }}
                           >
                             <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {ticket.status === 'aguardando' && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            disabled={!canAssign}
+                            onClick={() => handleAssign(ticket.id)}
+                          >
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Atribuir
                           </Button>
                         )}
                         {ticket.status === 'em_atendimento' && onResolve && (
