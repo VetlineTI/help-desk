@@ -1,12 +1,62 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Header } from '@/components/Header';
+import { TicketForm } from '@/components/TicketForm';
+import { TicketList } from '@/components/TicketList';
+import { useTickets } from '@/hooks/useTickets';
+import { TicketCategory } from '@/types/ticket';
+import { Send, Settings } from 'lucide-react';
 
 const Index = () => {
+  const { tickets, addTicket, assignTicket, resolveTicket, deleteTicket } = useTickets();
+  const [activeTab, setActiveTab] = useState('abrir');
+
+  const handleSubmit = (ticket: {
+    assunto: string;
+    categoria: TicketCategory;
+    descricao: string;
+    anexo?: string;
+    anexoNome?: string;
+  }) => {
+    addTicket(ticket);
+    setActiveTab('fila');
+  };
+
+  const pendingTickets = tickets.filter((t) => t.status === 'aguardando');
+  const allTickets = tickets;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <main className="container mx-auto py-8 px-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="abrir" className="flex items-center gap-2">
+              <Send className="h-4 w-4" />
+              Abrir Chamado
+            </TabsTrigger>
+            <TabsTrigger value="fila" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Admin ({pendingTickets.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="abrir" className="max-w-2xl mx-auto">
+            <TicketForm onSubmit={handleSubmit} />
+          </TabsContent>
+
+          <TabsContent value="fila">
+            <TicketList
+              tickets={allTickets}
+              isAdmin
+              onAssign={assignTicket}
+              onResolve={resolveTicket}
+              onDelete={deleteTicket}
+            />
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };
