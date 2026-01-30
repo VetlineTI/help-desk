@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -11,12 +12,14 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Ticket, TicketPriority } from '@/types/ticket';
-import { Clock, CheckCircle, AlertCircle, TrendingUp, Eye } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, TrendingUp, Eye, Play } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface DashboardProps {
   tickets: Ticket[];
+  onStart?: (ticketId: string) => void;
+  onResolve?: (ticketId: string, resolucao: string) => void;
 }
 
 const MONTHS = [
@@ -44,45 +47,79 @@ const priorityConfig: Record<TicketPriority, { label: string; className: string 
 interface TicketListItemProps {
   ticket: Ticket;
   onViewDescription: (ticket: Ticket) => void;
+  onStart?: (ticketId: string) => void;
+  onResolve?: (ticket: Ticket) => void;
 }
 
-function TicketListItem({ ticket, onViewDescription }: TicketListItemProps) {
+function TicketListItem({ ticket, onViewDescription, onStart, onResolve }: TicketListItemProps) {
   const priority = ticket.prioridade ? priorityConfig[ticket.prioridade] : null;
   
   return (
-    <div className="flex items-center justify-between py-2 px-3 border-b last:border-b-0 text-sm">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        <span className="font-mono text-muted-foreground shrink-0">#{ticket.numericId}</span>
-        <span className="truncate" title={ticket.solicitante}>{ticket.solicitante || '-'}</span>
-        <span className="truncate text-muted-foreground" title={ticket.analistaNome}>{ticket.analistaNome || '-'}</span>
-        {priority ? (
-          <Badge variant="outline" className={`${priority.className} shrink-0`}>
+    <div className="flex flex-col gap-1 py-2 px-3 text-sm hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => onViewDescription(ticket)}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-muted-foreground text-xs">#{ticket.numericId}</span>
+        {priority && (
+          <Badge variant="outline" className={`${priority.className} text-[10px] h-5 px-1.5`}>
             {priority.label}
           </Badge>
-        ) : (
-          <span className="text-muted-foreground">-</span>
         )}
-        <span className="text-muted-foreground shrink-0">
-          {ticket.atribuidoEm 
-            ? format(parseISO(ticket.atribuidoEm), "dd/MM/yyyy HH:mm", { locale: ptBR })
-            : '-'
-          }
-        </span>
       </div>
-      <Button size="sm" variant="ghost" onClick={() => onViewDescription(ticket)}>
-        <Eye className="h-4 w-4" />
-      </Button>
+      
+      <div className="flex items-center justify-between gap-2 mt-1">
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="font-medium truncate text-xs" title={ticket.solicitante}>{ticket.solicitante || 'Sem solicitante'}</span>
+          <span className="truncate text-xs text-muted-foreground" title={ticket.analistaNome}>
+            {ticket.analistaNome || '-'}
+          </span>
+        </div>
+      </div>
+      
+      <div className="flex items-center justify-between mt-1.5">
+         <div className="text-[10px] text-muted-foreground">
+          {ticket.atribuidoEm 
+            ? format(parseISO(ticket.atribuidoEm), "dd/MM HH:mm", { locale: ptBR })
+            : format(parseISO(ticket.criadoEm), "dd/MM HH:mm", { locale: ptBR })
+          }
+        </div>
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {ticket.status === 'aguardando' && ticket.analistaNome && onStart && (
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-6 px-2 text-xs"
+              onClick={() => onStart(ticket.id)}
+            >
+              <Play className="h-3 w-3 mr-1" />
+              Iniciar
+            </Button>
+          )}
+          {ticket.status === 'em_atendimento' && onResolve && (
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-6 px-2 text-xs"
+              onClick={() => onResolve(ticket)}
+            >
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Resolver
+            </Button>
+          )}
+          <Eye className="h-3 w-3 text-muted-foreground/50" />
+        </div>
+      </div>
     </div>
   );
 }
 
-export function Dashboard({ tickets }: DashboardProps) {
+export function Dashboard({ tickets, onStart, onResolve }: DashboardProps) {
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth.toString());
   const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
   const [viewingTicket, setViewingTicket] = useState<Ticket | null>(null);
+  const [resolvingTicket, setResolvingTicket] = useState<Ticket | null>(null);
+  const [resolucaoText, setResolucaoText] = useState('');
 
   const years = useMemo(() => {
     const yearsSet = new Set<number>();
@@ -107,8 +144,8 @@ export function Dashboard({ tickets }: DashboardProps) {
 
   const ticketsByStatus = useMemo(() => {
     return {
-      all: filteredTickets,
-      aguardando: filteredTickets.filter((t) => t.status === 'aguardando'),
+      backlog: filteredTickets.filter((t) => !t.analistaNome),
+      aguardando: filteredTickets.filter((t) => t.status === 'aguardando' && !!t.analistaNome),
       emAtendimento: filteredTickets.filter((t) => t.status === 'em_atendimento'),
       resolvidos: filteredTickets.filter((t) => t.status === 'resolvido'),
     };
@@ -116,7 +153,7 @@ export function Dashboard({ tickets }: DashboardProps) {
 
   const stats = useMemo(() => {
     return {
-      total: ticketsByStatus.all.length,
+      backlog: ticketsByStatus.backlog.length,
       aguardando: ticketsByStatus.aguardando.length,
       emAtendimento: ticketsByStatus.emAtendimento.length,
       resolvidos: ticketsByStatus.resolvidos.length,
@@ -125,10 +162,23 @@ export function Dashboard({ tickets }: DashboardProps) {
 
   const selectedMonthLabel = MONTHS.find((m) => m.value === selectedMonth)?.label || '';
 
+  const handleResolveClick = (ticket: Ticket) => {
+    setResolvingTicket(ticket);
+    setResolucaoText('');
+  };
+
+  const handleConfirmResolve = () => {
+    if (resolvingTicket && onResolve) {
+      onResolve(resolvingTicket.id, resolucaoText);
+      setResolvingTicket(null);
+      setResolucaoText('');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+        <h2 className="text-2xl font-bold text-foreground">Dashboard Kanban</h2>
         
         <div className="flex items-center gap-2">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -160,114 +210,126 @@ export function Dashboard({ tickets }: DashboardProps) {
       </div>
 
       <p className="text-muted-foreground">
-        Estatísticas de {selectedMonthLabel} de {selectedYear}
+        Visualização de chamados de {selectedMonthLabel} de {selectedYear}
       </p>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Total de Chamados */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Chamados</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-220px)] items-start">
+        {/* Backlog */}
+        <Card className="min-w-[320px] w-[320px] flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 py-3 shrink-0 bg-slate-200 dark:bg-slate-800 rounded-t-lg">
+            <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">Backlog</CardTitle>
+            <div className="bg-white/50 dark:bg-black/20 p-1 rounded">
+              <TrendingUp className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground mb-3">no período selecionado</p>
-            {ticketsByStatus.all.length > 0 && (
-              <div className="border rounded-md max-h-48 overflow-y-auto">
-                <div className="bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground border-b grid grid-cols-6 gap-2">
-                  <span>ID</span>
-                  <span>Solicitante</span>
-                  <span>Analista</span>
-                  <span>Prioridade</span>
-                  <span>Atribuído em</span>
-                  <span></span>
-                </div>
-                {ticketsByStatus.all.map((ticket) => (
-                  <TicketListItem key={ticket.id} ticket={ticket} onViewDescription={setViewingTicket} />
+          <CardContent className="flex flex-col flex-1 min-h-0 p-2">
+            <div className="flex items-baseline justify-between px-2 mb-2">
+               <div className="text-2xl font-bold text-slate-700 dark:text-slate-400">{stats.backlog}</div>
+               <span className="text-xs font-medium text-slate-500 uppercase">Aguardando</span>
+            </div>
+            
+            {ticketsByStatus.backlog.length > 0 ? (
+              <div className="flex-1 overflow-y-auto pr-1 space-y-2">
+                {ticketsByStatus.backlog.map((ticket) => (
+                  <div key={ticket.id} className="bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100 dark:border-slate-700">
+                     <TicketListItem ticket={ticket} onViewDescription={setViewingTicket} onStart={onStart} onResolve={handleResolveClick} />
+                  </div>
                 ))}
               </div>
+            ) : (
+               <div className="flex-1 flex items-center justify-center text-slate-400 italic text-sm">
+                 Nenhum item
+               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Aguardando */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aguardando</CardTitle>
-            <Clock className="h-4 w-4 text-amber-500" />
+        <Card className="min-w-[320px] w-[320px] flex flex-col h-full bg-amber-50/50 dark:bg-amber-950/20 border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 py-3 shrink-0 bg-amber-100 dark:bg-amber-900/60 rounded-t-lg">
+            <CardTitle className="text-sm font-bold text-amber-700 dark:text-amber-200 uppercase tracking-wide">Aguardando</CardTitle>
+            <div className="bg-amber-200/50 dark:bg-black/20 p-1 rounded">
+              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{stats.aguardando}</div>
-            <p className="text-xs text-muted-foreground mb-3">na fila de espera</p>
-            {ticketsByStatus.aguardando.length > 0 && (
-              <div className="border rounded-md max-h-48 overflow-y-auto">
-                <div className="bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground border-b grid grid-cols-6 gap-2">
-                  <span>ID</span>
-                  <span>Solicitante</span>
-                  <span>Analista</span>
-                  <span>Prioridade</span>
-                  <span>Atribuído em</span>
-                  <span></span>
-                </div>
+          <CardContent className="flex flex-col flex-1 min-h-0 p-2">
+            <div className="flex items-baseline justify-between px-2 mb-2">
+               <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.aguardando}</div>
+               <span className="text-xs font-medium text-amber-600/70 uppercase">Fila</span>
+            </div>
+            
+            {ticketsByStatus.aguardando.length > 0 ? (
+              <div className="flex-1 overflow-y-auto pr-1 space-y-2">
                 {ticketsByStatus.aguardando.map((ticket) => (
-                  <TicketListItem key={ticket.id} ticket={ticket} onViewDescription={setViewingTicket} />
+                   <div key={ticket.id} className="bg-white dark:bg-slate-800 rounded shadow-sm border border-amber-100 dark:border-amber-900/30">
+                    <TicketListItem ticket={ticket} onViewDescription={setViewingTicket} onStart={onStart} onResolve={handleResolveClick} />
+                  </div>
                 ))}
               </div>
+            ) : (
+                <div className="flex-1 flex items-center justify-center text-amber-400/50 italic text-sm">
+                 Nenhum item
+               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Em Atendimento */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Em Atendimento</CardTitle>
-            <AlertCircle className="h-4 w-4 text-blue-500" />
+        <Card className="min-w-[320px] w-[320px] flex flex-col h-full bg-blue-50/50 dark:bg-blue-950/20 border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 py-3 shrink-0 bg-blue-100 dark:bg-blue-900/60 rounded-t-lg">
+            <CardTitle className="text-sm font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wide">Em Atendimento</CardTitle>
+            <div className="bg-blue-200/50 dark:bg-black/20 p-1 rounded">
+              <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.emAtendimento}</div>
-            <p className="text-xs text-muted-foreground mb-3">sendo resolvidos</p>
-            {ticketsByStatus.emAtendimento.length > 0 && (
-              <div className="border rounded-md max-h-48 overflow-y-auto">
-                <div className="bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground border-b grid grid-cols-6 gap-2">
-                  <span>ID</span>
-                  <span>Solicitante</span>
-                  <span>Analista</span>
-                  <span>Prioridade</span>
-                  <span>Atribuído em</span>
-                  <span></span>
-                </div>
+          <CardContent className="flex flex-col flex-1 min-h-0 p-2">
+            <div className="flex items-baseline justify-between px-2 mb-2">
+               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.emAtendimento}</div>
+               <span className="text-xs font-medium text-blue-600/70 uppercase">Executando</span>
+            </div>
+            
+            {ticketsByStatus.emAtendimento.length > 0 ? (
+              <div className="flex-1 overflow-y-auto pr-1 space-y-2">
                 {ticketsByStatus.emAtendimento.map((ticket) => (
-                  <TicketListItem key={ticket.id} ticket={ticket} onViewDescription={setViewingTicket} />
+                  <div key={ticket.id} className="bg-white dark:bg-slate-800 rounded shadow-sm border border-blue-100 dark:border-blue-900/30">
+                    <TicketListItem ticket={ticket} onViewDescription={setViewingTicket} onStart={onStart} onResolve={handleResolveClick} />
+                  </div>
                 ))}
               </div>
+             ) : (
+                <div className="flex-1 flex items-center justify-center text-blue-400/50 italic text-sm">
+                 Nenhum item
+               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Resolvidos */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resolvidos</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
+        <Card className="min-w-[320px] w-[320px] flex flex-col h-full bg-green-50/50 dark:bg-green-950/20 border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 py-3 shrink-0 bg-green-100 dark:bg-green-900/60 rounded-t-lg">
+            <CardTitle className="text-sm font-bold text-green-700 dark:text-green-200 uppercase tracking-wide">Resolvidos</CardTitle>
+            <div className="bg-green-200/50 dark:bg-black/20 p-1 rounded">
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.resolvidos}</div>
-            <p className="text-xs text-muted-foreground mb-3">finalizados com sucesso</p>
-            {ticketsByStatus.resolvidos.length > 0 && (
-              <div className="border rounded-md max-h-48 overflow-y-auto">
-                <div className="bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground border-b grid grid-cols-6 gap-2">
-                  <span>ID</span>
-                  <span>Solicitante</span>
-                  <span>Analista</span>
-                  <span>Prioridade</span>
-                  <span>Atribuído em</span>
-                  <span></span>
-                </div>
+          <CardContent className="flex flex-col flex-1 min-h-0 p-2">
+             <div className="flex items-baseline justify-between px-2 mb-2">
+               <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.resolvidos}</div>
+               <span className="text-xs font-medium text-green-600/70 uppercase">Finalizados</span>
+            </div>
+            
+            {ticketsByStatus.resolvidos.length > 0 ? (
+              <div className="flex-1 overflow-y-auto pr-1 space-y-2">
                 {ticketsByStatus.resolvidos.map((ticket) => (
-                  <TicketListItem key={ticket.id} ticket={ticket} onViewDescription={setViewingTicket} />
+                  <div key={ticket.id} className="bg-white dark:bg-slate-800 rounded shadow-sm border border-green-100 dark:border-green-900/30">
+                    <TicketListItem ticket={ticket} onViewDescription={setViewingTicket} onStart={onStart} onResolve={handleResolveClick} />
+                  </div>
                 ))}
               </div>
+            ) : (
+               <div className="flex-1 flex items-center justify-center text-green-400/50 italic text-sm">
+                 Nenhum item
+               </div>
             )}
           </CardContent>
         </Card>
@@ -300,6 +362,42 @@ export function Dashboard({ tickets }: DashboardProps) {
                     <p>{viewingTicket.anexoNome}</p>
                   </div>
                 )}
+                {viewingTicket?.resolucao && (
+                  <div>
+                    <p className="font-medium text-foreground mb-1">Resolução</p>
+                    <p className="whitespace-pre-wrap">{viewingTicket.resolucao}</p>
+                  </div>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Resolução */}
+      <Dialog open={!!resolvingTicket} onOpenChange={() => { setResolvingTicket(null); setResolucaoText(''); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resolver Chamado #{resolvingTicket?.numericId}</DialogTitle>
+            <DialogDescription className="text-left pt-4">
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium text-foreground mb-2">Descreva a resolução do chamado:</p>
+                  <Textarea
+                    placeholder="Digite aqui as observações sobre a resolução..."
+                    value={resolucaoText}
+                    onChange={(e) => setResolucaoText(e.target.value)}
+                    className="min-h-[120px]"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => { setResolvingTicket(null); setResolucaoText(''); }}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleConfirmResolve} disabled={!resolucaoText.trim()}>
+                    Confirmar Resolução
+                  </Button>
+                </div>
               </div>
             </DialogDescription>
           </DialogHeader>

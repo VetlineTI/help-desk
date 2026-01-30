@@ -1,4 +1,4 @@
-export type TicketCategory = 
+export type TicketCategory =
   | 'Aparelho Corporativo'
   | 'E-mail corporativo'
   | 'Notebook'
@@ -26,6 +26,8 @@ export interface Ticket {
   atribuidoEm?: string;
   analistaId?: string;
   analistaNome?: string;
+  resolucao?: string;
+  resolvidoEm?: string;
 }
 
 export interface Analista {

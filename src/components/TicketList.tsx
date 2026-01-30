@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,16 +25,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Ticket, ANALISTAS, PRIORIDADES, TicketStatus, TicketPriority } from '@/types/ticket';
-import { Clock, CheckCircle, User, Trash2, Download, ListChecks, UserPlus, Eye } from 'lucide-react';
+import { Ticket, PRIORIDADES, TicketStatus, TicketPriority } from '@/types/ticket';
+import { Clock, CheckCircle, User, Trash2, Download, ListChecks, UserPlus, Eye, Play, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useSupabaseProfiles } from '@/hooks/useSupabaseProfiles';
+import { TicketChat } from './TicketChat';
+import { supabase } from '@/lib/supabaseClient';
 
 interface TicketListProps {
   tickets: Ticket[];
   isAdmin?: boolean;
   onAssign?: (ticketId: string, analistaId: string, analistaNome: string, prioridade: TicketPriority) => void;
-  onResolve?: (ticketId: string) => void;
+  onStart?: (ticketId: string) => void;
+  onResolve?: (ticketId: string, resolucao: string) => void;
   onDelete?: (ticketId: string) => void;
 }
 
@@ -50,19 +55,32 @@ const priorityConfig: Record<TicketPriority, { label: string; className: string 
   urgente: { label: 'Urgente', className: 'bg-red-100 text-red-700 border-red-300' },
 };
 
-export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: TicketListProps) {
+export function TicketList({ tickets, isAdmin, onAssign, onStart, onResolve, onDelete }: TicketListProps) {
+  const { profiles } = useSupabaseProfiles();
+  const analistasList = profiles.filter(p => p.role === 'analista' || p.role === 'admin');
+  
   const [selectedAnalista, setSelectedAnalista] = useState<Record<string, string>>({});
   const [selectedPrioridade, setSelectedPrioridade] = useState<Record<string, TicketPriority>>({});
   const [viewingTicket, setViewingTicket] = useState<Ticket | null>(null);
+  const [resolvingTicket, setResolvingTicket] = useState<Ticket | null>(null);
+  const [resolucaoText, setResolucaoText] = useState('');
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setCurrentUser({ id: user.id, email: user.email! });
+    });
+  }, []);
+
   const handleAssign = (ticketId: string) => {
     const analistaId = selectedAnalista[ticketId];
     const prioridade = selectedPrioridade[ticketId];
     
     if (!analistaId || !prioridade) return;
     
-    const analista = ANALISTAS.find((a) => a.id === analistaId);
+    const analista = analistasList.find((a) => a.id === analistaId);
     if (analista && onAssign) {
-      onAssign(ticketId, analista.id, analista.nome, prioridade);
+      onAssign(ticketId, analista.id, analista.email, prioridade);
     }
   };
 
@@ -160,9 +178,9 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
                             <SelectValue placeholder="Selecionar..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {ANALISTAS.map((analista) => (
+                            {analistasList.map((analista) => (
                               <SelectItem key={analista.id} value={analista.id}>
-                                {analista.nome}
+                                {analista.email}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -196,7 +214,7 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
                             <Download className="h-4 w-4" />
                           </Button>
                         )}
-                        {ticket.status === 'aguardando' && (
+                        {ticket.status === 'aguardando' && !ticket.analistaNome && (
                           <Button
                             size="sm"
                             variant="default"
@@ -207,8 +225,14 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
                             Atribuir
                           </Button>
                         )}
+                        {ticket.status === 'aguardando' && ticket.analistaNome && onStart && (
+                          <Button size="sm" variant="default" onClick={() => onStart(ticket.id)}>
+                            <Play className="h-4 w-4 mr-1" />
+                            Iniciar
+                          </Button>
+                        )}
                         {ticket.status === 'em_atendimento' && onResolve && (
-                          <Button size="sm" variant="outline" onClick={() => onResolve(ticket.id)}>
+                          <Button size="sm" variant="outline" onClick={() => { setResolvingTicket(ticket); setResolucaoText(''); }}>
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Resolver
                           </Button>
@@ -234,28 +258,87 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
       </CardContent>
 
       <Dialog open={!!viewingTicket} onOpenChange={() => setViewingTicket(null)}>
+        <DialogContent className="sm:max-w-[700px] gap-0 p-0">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="p-6 border-r bg-slate-50/50">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 mb-4">
+                  <span className="font-mono text-muted-foreground">#{viewingTicket?.numericId}</span>
+                  <span className="truncate">{viewingTicket?.assunto}</span>
+                </DialogTitle>
+                <div className="space-y-4">
+                  <div>
+                    <p className="font-medium text-xs text-muted-foreground mb-1 uppercase tracking-wider">Categoria</p>
+                    <Badge variant="outline">{viewingTicket?.categoria}</Badge>
+                  </div>
+                  <div>
+                    <p className="font-medium text-xs text-muted-foreground mb-1 uppercase tracking-wider">Descrição</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{viewingTicket?.descricao}</p>
+                  </div>
+                  {viewingTicket?.anexoNome && (
+                    <div>
+                      <p className="font-medium text-xs text-muted-foreground mb-1 uppercase tracking-wider">Anexo</p>
+                      <p className="text-sm flex items-center gap-2 text-primary font-medium cursor-pointer hover:underline">
+                        <Download className="h-4 w-4" />
+                        {viewingTicket.anexoNome}
+                      </p>
+                    </div>
+                  )}
+                  {viewingTicket?.resolucao && (
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                      <p className="font-bold text-xs text-green-700 mb-1 uppercase tracking-wider">Resolução Final</p>
+                      <p className="text-sm text-green-800 whitespace-pre-wrap">{viewingTicket.resolucao}</p>
+                    </div>
+                  )}
+                </div>
+              </DialogHeader>
+            </div>
+            <div className="p-0 h-[500px]">
+              {viewingTicket && currentUser ? (
+                <TicketChat ticketId={viewingTicket.id} currentUser={currentUser} />
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground p-8 text-center text-sm">
+                  Carregando chat...
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Resolução */}
+      <Dialog open={!!resolvingTicket} onOpenChange={() => { setResolvingTicket(null); setResolucaoText(''); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span className="font-mono text-muted-foreground">#{viewingTicket?.numericId}</span>
-              {viewingTicket?.assunto}
-            </DialogTitle>
+            <DialogTitle>Resolver Chamado #{resolvingTicket?.numericId}</DialogTitle>
             <DialogDescription className="text-left pt-4">
               <div className="space-y-4">
                 <div>
-                  <p className="font-medium text-foreground mb-1">Categoria</p>
-                  <Badge variant="outline">{viewingTicket?.categoria}</Badge>
+                  <p className="font-medium text-foreground mb-2">Descreva a resolução do chamado:</p>
+                  <Textarea
+                    placeholder="Digite aqui as observações sobre a resolução..."
+                    value={resolucaoText}
+                    onChange={(e) => setResolucaoText(e.target.value)}
+                    className="min-h-[120px]"
+                  />
                 </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Descrição</p>
-                  <p className="whitespace-pre-wrap">{viewingTicket?.descricao}</p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => { setResolvingTicket(null); setResolucaoText(''); }}>
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      if (resolvingTicket && onResolve) {
+                        onResolve(resolvingTicket.id, resolucaoText);
+                        setResolvingTicket(null);
+                        setResolucaoText('');
+                      }
+                    }} 
+                    disabled={!resolucaoText.trim()}
+                  >
+                    Confirmar Resolução
+                  </Button>
                 </div>
-                {viewingTicket?.anexoNome && (
-                  <div>
-                    <p className="font-medium text-foreground mb-1">Anexo</p>
-                    <p>{viewingTicket.anexoNome}</p>
-                  </div>
-                )}
               </div>
             </DialogDescription>
           </DialogHeader>

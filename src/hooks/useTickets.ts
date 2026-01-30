@@ -41,22 +41,36 @@ export function useTickets() {
   const assignTicket = (ticketId: string, analistaId: string, analistaNome: string, prioridade: TicketPriority) => {
     const updated = tickets.map((t) =>
       t.id === ticketId
-        ? { 
-            ...t, 
-            analistaId, 
-            analistaNome, 
-            prioridade, 
-            status: 'em_atendimento' as const,
-            atribuidoEm: new Date().toISOString()
-          }
+        ? {
+          ...t,
+          analistaId,
+          analistaNome,
+          prioridade,
+          status: 'aguardando' as const,
+          atribuidoEm: new Date().toISOString()
+        }
         : t
     );
     saveTickets(updated);
   };
 
-  const resolveTicket = (ticketId: string) => {
+  const startTicket = (ticketId: string) => {
     const updated = tickets.map((t) =>
-      t.id === ticketId ? { ...t, status: 'resolvido' as const } : t
+      t.id === ticketId ? { ...t, status: 'em_atendimento' as const } : t
+    );
+    saveTickets(updated);
+  };
+
+  const resolveTicket = (ticketId: string, resolucao: string) => {
+    const updated = tickets.map((t) =>
+      t.id === ticketId
+        ? {
+          ...t,
+          status: 'resolvido' as const,
+          resolucao,
+          resolvidoEm: new Date().toISOString()
+        }
+        : t
     );
     saveTickets(updated);
   };
@@ -70,6 +84,7 @@ export function useTickets() {
     tickets,
     addTicket,
     assignTicket,
+    startTicket,
     resolveTicket,
     deleteTicket,
   };
