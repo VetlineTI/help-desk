@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { Ticket, TicketPriority } from '@/types/ticket';
 
 const STORAGE_KEY = 'vetline_tickets';
+const COUNTER_KEY = 'vetline_ticket_counter';
+
+function generateNumericId(): string {
+  const stored = localStorage.getItem(COUNTER_KEY);
+  const counter = stored ? parseInt(stored, 10) + 1 : 1;
+  localStorage.setItem(COUNTER_KEY, counter.toString());
+  return counter.toString().padStart(6, '0');
+}
 
 export function useTickets() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -18,10 +26,11 @@ export function useTickets() {
     setTickets(newTickets);
   };
 
-  const addTicket = (ticket: Omit<Ticket, 'id' | 'status' | 'criadoEm'>) => {
+  const addTicket = (ticket: Omit<Ticket, 'id' | 'numericId' | 'status' | 'criadoEm'>) => {
     const newTicket: Ticket = {
       ...ticket,
       id: crypto.randomUUID(),
+      numericId: generateNumericId(),
       status: 'aguardando',
       criadoEm: new Date().toISOString(),
     };
