@@ -13,6 +13,7 @@ export type TicketPriority = 'baixa' | 'media' | 'alta' | 'urgente';
 
 export interface Ticket {
   id: string;
+  numericId: string;
   assunto: string;
   categoria: TicketCategory;
   descricao: string;

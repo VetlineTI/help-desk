@@ -10,6 +10,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -18,7 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Ticket, ANALISTAS, PRIORIDADES, TicketStatus, TicketPriority } from '@/types/ticket';
-import { Clock, CheckCircle, User, Trash2, Download, ListChecks, UserPlus } from 'lucide-react';
+import { Clock, CheckCircle, User, Trash2, Download, ListChecks, UserPlus, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -37,16 +44,16 @@ const statusConfig: Record<TicketStatus, { label: string; variant: 'default' | '
 };
 
 const priorityConfig: Record<TicketPriority, { label: string; className: string }> = {
-  baixa: { label: 'Baixa', className: 'bg-slate-100 text-slate-700 border-slate-300' },
-  media: { label: 'Média', className: 'bg-blue-100 text-blue-700 border-blue-300' },
-  alta: { label: 'Alta', className: 'bg-orange-100 text-orange-700 border-orange-300' },
+  baixa: { label: 'Baixa', className: 'bg-green-100 text-green-700 border-green-300' },
+  media: { label: 'Média', className: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
+  alta: { label: 'Alta', className: 'bg-red-100 text-red-700 border-red-300' },
   urgente: { label: 'Urgente', className: 'bg-red-100 text-red-700 border-red-300' },
 };
 
 export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: TicketListProps) {
   const [selectedAnalista, setSelectedAnalista] = useState<Record<string, string>>({});
   const [selectedPrioridade, setSelectedPrioridade] = useState<Record<string, TicketPriority>>({});
-
+  const [viewingTicket, setViewingTicket] = useState<Ticket | null>(null);
   const handleAssign = (ticketId: string) => {
     const analistaId = selectedAnalista[ticketId];
     const prioridade = selectedPrioridade[ticketId];
@@ -81,6 +88,7 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>ID</TableHead>
               <TableHead>Assunto</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Status</TableHead>
@@ -99,12 +107,10 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
               return (
                 <TableRow key={ticket.id}>
                   <TableCell>
-                    <div>
-                      <p className="font-medium">{ticket.assunto}</p>
-                      <p className="text-sm text-muted-foreground line-clamp-1">
-                        {ticket.descricao}
-                      </p>
-                    </div>
+                    <span className="font-mono text-sm text-muted-foreground">#{ticket.numericId}</span>
+                  </TableCell>
+                  <TableCell>
+                    <p className="font-medium">{ticket.assunto}</p>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{ticket.categoria}</Badge>
@@ -169,6 +175,13 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
                   {isAdmin && (
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setViewingTicket(ticket)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         {ticket.anexo && (
                           <Button
                             size="sm"
@@ -219,6 +232,35 @@ export function TicketList({ tickets, isAdmin, onAssign, onResolve, onDelete }: 
           </TableBody>
         </Table>
       </CardContent>
+
+      <Dialog open={!!viewingTicket} onOpenChange={() => setViewingTicket(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="font-mono text-muted-foreground">#{viewingTicket?.numericId}</span>
+              {viewingTicket?.assunto}
+            </DialogTitle>
+            <DialogDescription className="text-left pt-4">
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium text-foreground mb-1">Categoria</p>
+                  <Badge variant="outline">{viewingTicket?.categoria}</Badge>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground mb-1">Descrição</p>
+                  <p className="whitespace-pre-wrap">{viewingTicket?.descricao}</p>
+                </div>
+                {viewingTicket?.anexoNome && (
+                  <div>
+                    <p className="font-medium text-foreground mb-1">Anexo</p>
+                    <p>{viewingTicket.anexoNome}</p>
+                  </div>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
