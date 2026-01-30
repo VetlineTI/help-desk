@@ -13,6 +13,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('abrir');
 
   const handleSubmit = (ticket: {
+    solicitante: string;
     assunto: string;
     categoria: TicketCategory;
     descricao: string;

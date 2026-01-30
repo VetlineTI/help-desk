@@ -14,6 +14,7 @@ export type TicketPriority = 'baixa' | 'media' | 'alta' | 'urgente';
 export interface Ticket {
   id: string;
   numericId: string;
+  solicitante: string;
   assunto: string;
   categoria: TicketCategory;
   descricao: string;
@@ -22,6 +23,7 @@ export interface Ticket {
   status: TicketStatus;
   prioridade?: TicketPriority;
   criadoEm: string;
+  atribuidoEm?: string;
   analistaId?: string;
   analistaNome?: string;
 }

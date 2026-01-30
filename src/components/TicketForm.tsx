@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 
 interface TicketFormProps {
   onSubmit: (ticket: {
+    solicitante: string;
     assunto: string;
     categoria: TicketCategory;
     descricao: string;
@@ -26,6 +27,7 @@ interface TicketFormProps {
 }
 
 export function TicketForm({ onSubmit }: TicketFormProps) {
+  const [solicitante, setSolicitante] = useState('');
   const [assunto, setAssunto] = useState('');
   const [categoria, setCategoria] = useState<TicketCategory | ''>('');
   const [descricao, setDescricao] = useState('');
@@ -51,6 +53,10 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!solicitante.trim()) {
+      toast.error('Preencha seu nome');
+      return;
+    }
     if (!assunto.trim()) {
       toast.error('Preencha o assunto');
       return;
@@ -65,6 +71,7 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
     }
 
     onSubmit({
+      solicitante: solicitante.trim(),
       assunto: assunto.trim(),
       categoria,
       descricao: descricao.trim(),
@@ -72,6 +79,7 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
       anexoNome,
     });
 
+    setSolicitante('');
     setAssunto('');
     setCategoria('');
     setDescricao('');
@@ -91,6 +99,16 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
       </CardHeader>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="solicitante">Seu Nome *</Label>
+            <Input
+              id="solicitante"
+              placeholder="Digite seu nome completo"
+              value={solicitante}
+              onChange={(e) => setSolicitante(e.target.value)}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="assunto">Assunto *</Label>
             <Input
