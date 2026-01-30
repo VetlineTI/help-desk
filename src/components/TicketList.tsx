@@ -112,8 +112,8 @@ export function TicketList({ tickets, isAdmin, onAssign, onStart, onResolve, onD
               <TableHead>Status</TableHead>
               <TableHead>Prioridade</TableHead>
               <TableHead>Data</TableHead>
-              {isAdmin && <TableHead>Analista</TableHead>}
-              {isAdmin && <TableHead className="text-right">Ações</TableHead>}
+              <TableHead>Analista</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -167,89 +167,87 @@ export function TicketList({ tickets, isAdmin, onAssign, onStart, onResolve, onD
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(ticket.criadoEm), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </TableCell>
-                  {isAdmin && (
-                    <TableCell>
-                      {ticket.status === 'aguardando' ? (
-                        <Select
-                          value={selectedAnalista[ticket.id] || ''}
-                          onValueChange={(v) => setSelectedAnalista((prev) => ({ ...prev, [ticket.id]: v }))}
-                        >
-                          <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="Selecionar..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {analistasList.map((analista) => (
-                              <SelectItem key={analista.id} value={analista.id}>
-                                {analista.email}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span className="text-sm">{ticket.analistaNome || '-'}</span>
-                      )}
-                    </TableCell>
-                  )}
-                  {isAdmin && (
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                  <TableCell>
+                    {ticket.status === 'aguardando' && isAdmin ? (
+                      <Select
+                        value={selectedAnalista[ticket.id] || ''}
+                        onValueChange={(v) => setSelectedAnalista((prev) => ({ ...prev, [ticket.id]: v }))}
+                      >
+                        <SelectTrigger className="w-[160px]">
+                          <SelectValue placeholder="Selecionar..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {analistasList.map((analista) => (
+                            <SelectItem key={analista.id} value={analista.id}>
+                              {analista.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-sm">{ticket.analistaNome || '-'}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setViewingTicket(ticket)}
+                        title="Ver detalhes e Chat"
+                      >
+                        <Eye className="h-4 w-4" />
+                        {!isAdmin && <span className="ml-2 text-xs">Ver/Chat</span>}
+                      </Button>
+                      {ticket.anexo && (
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => setViewingTicket(ticket)}
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = ticket.anexo!;
+                            link.download = ticket.anexoNome || 'anexo';
+                            link.click();
+                          }}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Download className="h-4 w-4" />
                         </Button>
-                        {ticket.anexo && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = ticket.anexo!;
-                              link.download = ticket.anexoNome || 'anexo';
-                              link.click();
-                            }}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {ticket.status === 'aguardando' && !ticket.analistaNome && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            disabled={!canAssign}
-                            onClick={() => handleAssign(ticket.id)}
-                          >
-                            <UserPlus className="h-4 w-4 mr-1" />
-                            Atribuir
-                          </Button>
-                        )}
-                        {ticket.status === 'aguardando' && ticket.analistaNome && onStart && (
-                          <Button size="sm" variant="default" onClick={() => onStart(ticket.id)}>
-                            <Play className="h-4 w-4 mr-1" />
-                            Iniciar
-                          </Button>
-                        )}
-                        {ticket.status === 'em_atendimento' && onResolve && (
-                          <Button size="sm" variant="outline" onClick={() => { setResolvingTicket(ticket); setResolucaoText(''); }}>
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Resolver
-                          </Button>
-                        )}
-                        {onDelete && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => onDelete(ticket.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
+                      )}
+                      {isAdmin && ticket.status === 'aguardando' && !ticket.analistaNome && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={!canAssign}
+                          onClick={() => handleAssign(ticket.id)}
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Atribuir
+                        </Button>
+                      )}
+                      {isAdmin && ticket.status === 'aguardando' && ticket.analistaNome && onStart && (
+                        <Button size="sm" variant="default" onClick={() => onStart(ticket.id)}>
+                          <Play className="h-4 w-4 mr-1" />
+                          Iniciar
+                        </Button>
+                      )}
+                      {isAdmin && ticket.status === 'em_atendimento' && onResolve && (
+                        <Button size="sm" variant="outline" onClick={() => { setResolvingTicket(ticket); setResolucaoText(''); }}>
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Resolver
+                        </Button>
+                      )}
+                      {isAdmin && onDelete && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => onDelete(ticket.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })}

@@ -124,61 +124,66 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-10">
-      <div className="flex items-center justify-between px-6 bg-white border-b sticky top-0 z-50">
-        <Header />
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs text-muted-foreground">
-              Logado como: <span className="font-bold text-primary">{role || 'carregando...'}</span>
-            </p>
-            <p className="text-sm font-medium">{session.user.email}</p>
+      <div className="bg-white border-b shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto h-16 flex items-center justify-between px-4">
+          <Header />
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block border-r pr-4 border-slate-100">
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                Logado como: <span className="text-primary">{role || 'carregando...'}</span>
+              </p>
+              <p className="text-sm font-semibold text-slate-700">{session.user.email}</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-destructive hover:bg-destructive/5">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-destructive">
-            <LogOut className="h-4 w-4 mr-2" />
-            Sair
-          </Button>
         </div>
       </div>
       
-      <main className="container mx-auto py-8 px-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full max-w-2xl mx-auto ${isAdmin ? 'grid-cols-4' : (isAnalista ? 'grid-cols-3' : 'grid-cols-1')}`}>
-            <TabsTrigger value="abrir" className="flex items-center gap-2">
-              <Send className="h-4 w-4" />
-              Abrir Chamado
-            </TabsTrigger>
-            {isAnalista && (
-              <>
-                <TabsTrigger value="fila" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  Admin ({pendingTickets.length})
-                </TabsTrigger>
-                <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
-                </TabsTrigger>
-              </>
-            )}
-            {isAdmin && (
-              <TabsTrigger value="usuarios" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Usuários
+      <main className="container mx-auto py-10 px-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          {isAnalista && (
+            <TabsList className={`grid w-full max-w-3xl mx-auto shadow-sm p-1 bg-slate-100/50 ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
+              <TabsTrigger value="abrir" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Send className="h-4 w-4" />
+                Novo Chamado
               </TabsTrigger>
-            )}
-          </TabsList>
+              <TabsTrigger value="fila" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Settings className="h-4 w-4" />
+                Fila ({pendingTickets.length})
+              </TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger value="usuarios" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Users className="h-4 w-4" />
+                  Usuários
+                </TabsTrigger>
+              )}
+            </TabsList>
+          )}
 
-          <TabsContent value="abrir" className="max-w-2xl mx-auto">
-            <div className="mb-6 text-center">
-              <h1 className="text-2xl font-bold tracking-tight">Meus Chamados</h1>
-              <p className="text-muted-foreground">Aqui você pode abrir novos chamados ou acompanhar os seus.</p>
+          <TabsContent value="abrir" className="max-w-5xl mx-auto focus-visible:outline-none">
+            <div className="mb-8 border-b pb-4">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">Meus Chamados</h1>
+              <p className="text-muted-foreground mt-1">Abra novos chamados ou acompanhe o progresso das suas solicitações.</p>
             </div>
             
-            <div className="grid gap-8">
-              <TicketForm onSubmit={handleSubmit} />
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+              <div className="w-full lg:w-[400px] shrink-0">
+                <TicketForm onSubmit={handleSubmit} />
+              </div>
               
               {!isAdmin && !isAnalista && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Histórico de Chamados</h3>
+                <div className="flex-1 w-full space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    <h3 className="font-bold text-lg text-slate-700 uppercase tracking-tight">Histórico de Chamados</h3>
+                  </div>
                   <TicketList
                     tickets={tickets}
                     isAdmin={false}

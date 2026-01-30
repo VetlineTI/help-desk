@@ -8,6 +8,8 @@ export interface ChatMessage {
   user_id: string;
   sender_email: string;
   content: string;
+  file_url?: string;
+  file_name?: string;
   created_at: string;
 }
 
@@ -61,7 +63,7 @@ export function useSupabaseMessages(ticketId: string) {
 
   // Mutação para enviar mensagem
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ content, user }: { content: string; user: any }) => {
+    mutationFn: async ({ content, user, fileUrl, fileName }: { content: string; user: any; fileUrl?: string; fileName?: string }) => {
       const { data, error } = await supabase
         .schema('ti')
         .from('messages')
@@ -71,6 +73,8 @@ export function useSupabaseMessages(ticketId: string) {
             user_id: user.id,
             sender_email: user.email,
             content: content,
+            file_url: fileUrl,
+            file_name: fileName,
           },
         ])
         .select()
@@ -83,7 +87,8 @@ export function useSupabaseMessages(ticketId: string) {
 
   return {
     messages,
-    sendMessage: (content: string, user: any) => sendMessageMutation.mutateAsync({ content, user }),
+    sendMessage: (content: string, user: any, fileUrl?: string, fileName?: string) =>
+      sendMessageMutation.mutateAsync({ content, user, fileUrl, fileName }),
     isSending: sendMessageMutation.isPending,
   };
 }

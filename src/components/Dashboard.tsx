@@ -15,6 +15,9 @@ import { Ticket, TicketPriority } from '@/types/ticket';
 import { Clock, CheckCircle, AlertCircle, TrendingUp, Eye, Play } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { TicketChat } from './TicketChat';
+import { supabase } from '@/lib/supabaseClient';
+import { useEffect } from 'react';
 
 interface DashboardProps {
   tickets: Ticket[];
@@ -120,6 +123,13 @@ export function Dashboard({ tickets, onStart, onResolve }: DashboardProps) {
   const [viewingTicket, setViewingTicket] = useState<Ticket | null>(null);
   const [resolvingTicket, setResolvingTicket] = useState<Ticket | null>(null);
   const [resolucaoText, setResolucaoText] = useState('');
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setCurrentUser({ id: user.id, email: user.email! });
+    });
+  }, []);
 
   const years = useMemo(() => {
     const yearsSet = new Set<number>();
@@ -336,41 +346,57 @@ export function Dashboard({ tickets, onStart, onResolve }: DashboardProps) {
       </div>
 
       <Dialog open={!!viewingTicket} onOpenChange={() => setViewingTicket(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span className="font-mono text-muted-foreground">#{viewingTicket?.numericId}</span>
-              {viewingTicket?.assunto}
-            </DialogTitle>
-            <DialogDescription className="text-left pt-4">
-              <div className="space-y-4">
-                <div>
-                  <p className="font-medium text-foreground mb-1">Solicitante</p>
-                  <p>{viewingTicket?.solicitante || '-'}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Categoria</p>
-                  <Badge variant="outline">{viewingTicket?.categoria}</Badge>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Descrição</p>
-                  <p className="whitespace-pre-wrap">{viewingTicket?.descricao}</p>
-                </div>
-                {viewingTicket?.anexoNome && (
+        <DialogContent className="sm:max-w-[700px] gap-0 p-0 overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="p-6 border-r bg-slate-50/50">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 mb-4">
+                  <span className="font-mono text-muted-foreground text-sm font-normal">#{viewingTicket?.numericId}</span>
+                  <span className="truncate">{viewingTicket?.assunto}</span>
+                </DialogTitle>
+                <div className="space-y-4 text-left overflow-y-auto max-h-[400px] pr-2">
                   <div>
-                    <p className="font-medium text-foreground mb-1">Anexo</p>
-                    <p>{viewingTicket.anexoNome}</p>
+                    <p className="font-bold text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Solicitante</p>
+                    <p className="text-sm font-medium">{viewingTicket?.solicitante || '-'}</p>
                   </div>
-                )}
-                {viewingTicket?.resolucao && (
                   <div>
-                    <p className="font-medium text-foreground mb-1">Resolução</p>
-                    <p className="whitespace-pre-wrap">{viewingTicket.resolucao}</p>
+                    <p className="font-bold text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Categoria</p>
+                    <Badge variant="outline" className="text-xs font-normal">{viewingTicket?.categoria}</Badge>
                   </div>
-                )}
-              </div>
-            </DialogDescription>
-          </DialogHeader>
+                  <div>
+                    <p className="font-bold text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Descrição</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed bg-white p-3 rounded border border-slate-100 italic">
+                      "{viewingTicket?.descricao}"
+                    </p>
+                  </div>
+                  {viewingTicket?.anexoNome && (
+                    <div>
+                      <p className="font-bold text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Anexo</p>
+                      <p className="text-xs text-primary font-medium flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3" />
+                        {viewingTicket.anexoNome}
+                      </p>
+                    </div>
+                  )}
+                  {viewingTicket?.resolucao && (
+                    <div className="bg-green-50 p-3 rounded border border-green-100">
+                      <p className="font-bold text-[10px] text-green-700 mb-1 uppercase tracking-wider">Resolução</p>
+                      <p className="text-sm text-green-800 whitespace-pre-wrap leading-tight">{viewingTicket.resolucao}</p>
+                    </div>
+                  )}
+                </div>
+              </DialogHeader>
+            </div>
+            <div className="p-0 h-[500px]">
+              {viewingTicket && currentUser ? (
+                <TicketChat ticketId={viewingTicket.id} currentUser={currentUser} />
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground p-8 text-center text-sm italic">
+                  Preparando chat...
+                </div>
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
