@@ -124,161 +124,168 @@ export function TicketList({ tickets, isAdmin, onAssign, onStart, onResolve, onD
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50/40 hover:bg-slate-50/40 border-b border-slate-100">
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">ID</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Assunto</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Categoria</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Status</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Prioridade</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Abertura</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Responsável</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3 text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tickets.map((ticket) => {
-              const status = statusConfig[ticket.status];
-              const priority = ticket.prioridade ? priorityConfig[ticket.prioridade] : null;
-              const canAssign = selectedAnalista[ticket.id] && selectedPrioridade[ticket.id];
-              
-              return (
-                <TableRow key={ticket.id} className="hover:bg-slate-50/70 transition-colors border-b border-slate-100/80">
-                  <TableCell className="py-3">
-                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200/60">
-                      #{ticket.numericId}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <p className="font-semibold text-xs text-slate-900 line-clamp-1">{ticket.assunto}</p>
-                    <p className="text-[11px] text-slate-400 line-clamp-1">{ticket.solicitante}</p>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <span className="text-xs font-medium text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/50">
-                      {ticket.categoria}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <Badge variant="outline" className={`${status.className} text-[10px] flex items-center gap-1.5 w-fit px-2 py-0.5`}>
-                      {status.icon}
-                      {status.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {ticket.status === 'aguardando' && isAdmin ? (
-                      <Select
-                        value={selectedPrioridade[ticket.id] || undefined}
-                        onValueChange={(v) => setSelectedPrioridade((prev) => ({ ...prev, [ticket.id]: v as TicketPriority }))}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Prioridade" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PRIORIDADES.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>
-                              {p.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : priority ? (
-                      <Badge variant="outline" className={priority.className}>
-                        {priority.label}
+        <div className="overflow-x-auto w-full">
+          <Table className="min-w-[650px]">
+            <TableHeader>
+              <TableRow className="bg-slate-50/40 hover:bg-slate-50/40 border-b border-slate-100">
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">ID</TableHead>
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Assunto</TableHead>
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Categoria</TableHead>
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Status</TableHead>
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Prioridade</TableHead>
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Abertura</TableHead>
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Responsável</TableHead>
+                <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3 text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tickets.map((ticket) => {
+                const status = statusConfig[ticket.status];
+                const priority = ticket.prioridade ? priorityConfig[ticket.prioridade] : null;
+                const canAssign = selectedAnalista[ticket.id] && selectedPrioridade[ticket.id];
+                
+                return (
+                  <TableRow key={ticket.id} className="hover:bg-slate-50/70 transition-colors border-b border-slate-100/80">
+                    <TableCell className="py-3">
+                      <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200/60">
+                        #{ticket.numericId}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <p className="font-semibold text-xs text-slate-900 line-clamp-1">{ticket.assunto}</p>
+                      <p className="text-[11px] text-slate-400 line-clamp-1">{ticket.solicitante}</p>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <span className="text-xs font-medium text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/50">
+                        {ticket.categoria}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <Badge variant="outline" className={`${status.className} text-[10px] flex items-center gap-1.5 w-fit px-2 py-0.5`}>
+                        {status.icon}
+                        {status.label}
                       </Badge>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {format(new Date(ticket.criadoEm), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell>
-                    {ticket.status === 'aguardando' && isAdmin ? (
-                      <Select
-                        value={selectedAnalista[ticket.id] || ''}
-                        onValueChange={(v) => setSelectedAnalista((prev) => ({ ...prev, [ticket.id]: v }))}
-                      >
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue placeholder="Selecionar..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {analistasList.map((analista) => (
-                            <SelectItem key={analista.id} value={analista.id}>
-                              {analista.email}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <span className="text-sm">{ticket.analistaNome || '-'}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setViewingTicket(ticket)}
-                        title="Ver detalhes e Chat"
-                      >
-                        <Eye className="h-4 w-4" />
-                        {!isAdmin && <span className="ml-2 text-xs">Ver/Chat</span>}
-                      </Button>
-                      {ticket.anexo && (
+                    </TableCell>
+                    <TableCell className="py-3">
+                      {ticket.status === 'aguardando' && isAdmin ? (
+                        <Select
+                          value={selectedPrioridade[ticket.id] || undefined}
+                          onValueChange={(v) => setSelectedPrioridade((prev) => ({ ...prev, [ticket.id]: v as TicketPriority }))}
+                        >
+                          <SelectTrigger className="w-[120px] h-8 text-xs bg-white">
+                            <SelectValue placeholder="Prioridade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRIORIDADES.map((p) => (
+                              <SelectItem key={p.value} value={p.value} className="text-xs">
+                                {p.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : priority ? (
+                        <Badge variant="outline" className={`${priority.className} text-[10px] px-2 py-0.5`}>
+                          {priority.label}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-500 py-3 whitespace-nowrap">
+                      {format(new Date(ticket.criadoEm), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      {ticket.status === 'aguardando' && isAdmin ? (
+                        <Select
+                          value={selectedAnalista[ticket.id] || ''}
+                          onValueChange={(v) => setSelectedAnalista((prev) => ({ ...prev, [ticket.id]: v }))}
+                        >
+                          <SelectTrigger className="w-[160px] h-8 text-xs bg-white">
+                            <SelectValue placeholder="Selecionar..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {analistasList.map((analista) => (
+                              <SelectItem key={analista.id} value={analista.id} className="text-xs">
+                                {analista.email}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="text-xs text-slate-600 truncate max-w-[150px] block">{ticket.analistaNome || '-'}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right py-3">
+                      <div className="flex justify-end gap-1.5">
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = ticket.anexo!;
-                            link.download = ticket.anexoNome || 'anexo';
-                            link.click();
-                          }}
+                          className="h-8 px-2 text-slate-600 hover:text-primary hover:bg-primary/10"
+                          onClick={() => setViewingTicket(ticket)}
+                          title="Ver detalhes e Chat"
                         >
-                          <Download className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5" />
+                          {!isAdmin && <span className="ml-1 text-[11px] font-semibold">Chat</span>}
                         </Button>
-                      )}
-                      {isAdmin && ticket.status === 'aguardando' && !ticket.analistaNome && (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          disabled={!canAssign}
-                          onClick={() => handleAssign(ticket.id)}
-                        >
-                          <UserPlus className="h-4 w-4 mr-1" />
-                          Atribuir
-                        </Button>
-                      )}
-                      {isAdmin && ticket.status === 'aguardando' && ticket.analistaNome && onStart && (
-                        <Button size="sm" variant="default" onClick={() => onStart(ticket.id)}>
-                          <Play className="h-4 w-4 mr-1" />
-                          Iniciar
-                        </Button>
-                      )}
-                      {isAdmin && ticket.status === 'em_atendimento' && onResolve && (
-                        <Button size="sm" variant="outline" onClick={() => { setResolvingTicket(ticket); setResolucaoText(''); }}>
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Resolver
-                        </Button>
-                      )}
-                      {isAdmin && onDelete && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => onDelete(ticket.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                        {ticket.anexo && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-slate-600 hover:text-slate-900"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = ticket.anexo!;
+                              link.download = ticket.anexoNome || 'anexo';
+                              link.click();
+                            }}
+                            title="Baixar anexo"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {isAdmin && ticket.status === 'aguardando' && !ticket.analistaNome && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-8 text-xs"
+                            disabled={!canAssign}
+                            onClick={() => handleAssign(ticket.id)}
+                          >
+                            <UserPlus className="h-3.5 w-3.5 mr-1" />
+                            Atribuir
+                          </Button>
+                        )}
+                        {isAdmin && ticket.status === 'aguardando' && ticket.analistaNome && onStart && (
+                          <Button size="sm" variant="default" className="h-8 text-xs" onClick={() => onStart(ticket.id)}>
+                            <Play className="h-3.5 w-3.5 mr-1" />
+                            Iniciar
+                          </Button>
+                        )}
+                        {isAdmin && ticket.status === 'em_atendimento' && onResolve && (
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setResolvingTicket(ticket); setResolucaoText(''); }}>
+                            <CheckCircle className="h-3.5 w-3.5 mr-1 text-emerald-600" />
+                            Resolver
+                          </Button>
+                        )}
+                        {isAdmin && onDelete && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => onDelete(ticket.id)}
+                            title="Excluir chamado"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
 
       <Dialog open={!!viewingTicket} onOpenChange={() => setViewingTicket(null)}>

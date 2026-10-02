@@ -239,27 +239,27 @@ const Index = () => {
           )}
 
           {/* Aba: Abrir Chamado */}
-          <TabsContent value="abrir" className="max-w-5xl mx-auto focus-visible:outline-none">
-            <div className="mb-8 border-b pb-4">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">
+          <TabsContent value="abrir" className="w-full max-w-7xl mx-auto focus-visible:outline-none">
+            <div className="mb-6 border-b pb-4">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800">
                 {isAnalista ? 'Novo Chamado' : 'Abertura de Chamado'}
               </h1>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 {isAnalista
                   ? 'Abra novos chamados ou acompanhe solicitações.'
                   : 'Preencha o formulário abaixo para abrir um chamado com o time de suporte.'}
               </p>
             </div>
             
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
-              <div className="w-full lg:w-[420px] shrink-0">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+              <div className="w-full lg:w-[380px] xl:w-[400px] shrink-0">
                 <TicketForm defaultSolicitante={session?.user?.email} onSubmit={handleSubmit} />
               </div>
               
-              <div className="flex-1 w-full space-y-4">
+              <div className="flex-1 min-w-0 w-full space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                  <h3 className="font-bold text-lg text-slate-700 uppercase tracking-tight">
+                  <div className="h-2 w-2 rounded-full bg-[#82c341] animate-pulse" />
+                  <h3 className="font-bold text-sm sm:text-base text-slate-700 uppercase tracking-tight">
                     {isAnalista ? 'Meus Chamados Recentes' : 'Seus Últimos Chamados'}
                   </h3>
                 </div>
@@ -272,10 +272,10 @@ const Index = () => {
           </TabsContent>
 
           {/* Aba: Meus Chamados (visão completa para usuário comum) */}
-          <TabsContent value="meus_chamados" className="max-w-5xl mx-auto focus-visible:outline-none">
-            <div className="mb-8 border-b pb-4">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">Histórico de Chamados</h1>
-              <p className="text-muted-foreground mt-1">Acompanhe todos os seus chamados abertos e o andamento do suporte.</p>
+          <TabsContent value="meus_chamados" className="w-full max-w-7xl mx-auto focus-visible:outline-none">
+            <div className="mb-6 border-b pb-4">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800">Histórico de Chamados</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Acompanhe todos os seus chamados abertos e o andamento do suporte.</p>
             </div>
             <TicketList
               tickets={userTickets}
