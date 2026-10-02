@@ -23,30 +23,18 @@ export function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        if (data?.session) {
-          toast.success('Cadastro realizado com sucesso!');
-        } else {
-          toast.success('Cadastro realizado com sucesso! Você já pode entrar.');
-          setIsSignUp(false);
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success('Login realizado com sucesso!');
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success('Login realizado com sucesso!');
     } catch (error: any) {
       if (error.message?.includes('Email not confirmed')) {
-        toast.error('E-mail não confirmado. Desative a confirmação de e-mail no painel do Supabase.');
+        toast.error('E-mail não confirmado. Contate o administrador.');
       } else if (error.message?.includes('Invalid login credentials')) {
         toast.error('E-mail ou senha inválidos.');
       } else {
@@ -147,41 +135,17 @@ export function Auth() {
       {/* Lado Direito: Painel de Autenticação */}
       <div className="lg:w-1/2 flex items-center justify-center p-6 sm:p-10 lg:p-14 bg-slate-900/60">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200/80 p-6 sm:p-8">
-          {/* Seletor de Modo (Entrar vs Cadastrar) */}
-          <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl mb-6 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(false)}
-              className={`py-2 rounded-lg transition-all ${
-                !isSignUp
-                  ? 'bg-white text-slate-900 shadow-sm font-bold border border-slate-200/50'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Acessar Conta
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsSignUp(true)}
-              className={`py-2 rounded-lg transition-all ${
-                isSignUp
-                  ? 'bg-white text-slate-900 shadow-sm font-bold border border-slate-200/50'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Novo Cadastro
-            </button>
-          </div>
-
           {/* Cabeçalho do Formulário */}
           <div className="mb-6">
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-              {isSignUp ? 'Criar Acesso Corporativo' : 'Bem-vindo de volta'}
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold mb-2">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#1f6a89]" />
+              <span>Acesso Restrito a Colaboradores</span>
+            </div>
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Acessar o Sistema
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              {isSignUp
-                ? 'Preencha seus dados para cadastrar seu usuário no sistema'
-                : 'Insira seu e-mail corporativo e senha para continuar'}
+              Insira suas credenciais corporativas para entrar na plataforma.
             </p>
           </div>
 
@@ -241,11 +205,6 @@ export function Auth() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Autenticando...
                 </>
-              ) : isSignUp ? (
-                <>
-                  Criar Minha Conta
-                  <ArrowRight className="h-4 w-4" />
-                </>
               ) : (
                 <>
                   Entrar no Help Desk
@@ -255,8 +214,15 @@ export function Auth() {
             </Button>
           </form>
 
+          {/* Aviso sobre Novos Usuários */}
+          <div className="mt-6 p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+            <p className="text-[11px] text-slate-500">
+              Não possui login? Solicite seu acesso com a equipe de <strong className="text-slate-700">TI / Administrador</strong>.
+            </p>
+          </div>
+
           {/* Rodapé de Segurança */}
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-[#82c341]" />
               <span>Autenticação Segura</span>
