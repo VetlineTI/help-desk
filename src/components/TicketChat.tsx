@@ -71,11 +71,11 @@ export function TicketChat({ ticketId, currentUser }: TicketChatProps) {
 
   return (
     <div className="flex flex-col h-[500px] border rounded-lg bg-slate-50 overflow-hidden">
-      <div className="bg-white p-3 border-b flex items-center justify-between">
-        <h3 className="font-semibold text-sm flex items-center gap-2">
+      <div className="bg-white p-3 pr-12 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <Send className="h-4 w-4 text-primary" />
-          Chat de Atendimento
-        </h3>
+          <h3 className="font-semibold text-sm">Chat de Atendimento</h3>
+        </div>
         <span className="text-[10px] text-muted-foreground bg-slate-100 px-2 py-0.5 rounded-full uppercase font-bold">
           Tempo Real
         </span>

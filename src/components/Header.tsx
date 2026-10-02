@@ -1,14 +1,23 @@
 
 export function Header() {
   return (
-    <div className="flex items-center gap-3">
-      <img 
-        src="/logo.png" 
-        alt="Vetline Logo" 
-        className="h-10 w-auto object-contain"
-      />
-      <div className="border-l border-slate-200 pl-3">
-        <p className="text-slate-600 font-bold text-sm tracking-tight uppercase">Sistema de Chamados</p>
+    <div className="flex items-center gap-3.5">
+      <div className="flex items-center">
+        <img 
+          src="/logo.png" 
+          alt="Vetline" 
+          className="h-9 w-auto object-contain transition-transform hover:scale-[1.02]"
+        />
+      </div>
+      <div className="h-6 w-px bg-slate-200/80 hidden sm:block" />
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2">
+          <span className="text-slate-900 font-extrabold text-sm tracking-tight">Central de Ajuda</span>
+          <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-vetline-gradient-soft text-[#1f6a89] border border-[#82c341]/30">
+            TI & Suporte
+          </span>
+        </div>
+        <span className="text-[11px] text-slate-400 font-medium hidden sm:block">Vetline Brasil</span>
       </div>
     </div>
   );

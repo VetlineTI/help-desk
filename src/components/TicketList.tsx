@@ -42,17 +42,29 @@ interface TicketListProps {
   onDelete?: (ticketId: string) => void;
 }
 
-const statusConfig: Record<TicketStatus, { label: string; variant: 'default' | 'secondary' | 'outline'; icon: React.ReactNode }> = {
-  aguardando: { label: 'Aguardando', variant: 'secondary', icon: <Clock className="h-3 w-3" /> },
-  em_atendimento: { label: 'Em Atendimento', variant: 'default', icon: <User className="h-3 w-3" /> },
-  resolvido: { label: 'Resolvido', variant: 'outline', icon: <CheckCircle className="h-3 w-3" /> },
+const statusConfig: Record<TicketStatus, { label: string; className: string; icon: React.ReactNode }> = {
+  aguardando: { 
+    label: 'Aguardando', 
+    className: 'bg-amber-50 text-amber-800 border-amber-200/80 font-medium', 
+    icon: <Clock className="h-3 w-3 text-amber-600" /> 
+  },
+  em_atendimento: { 
+    label: 'Em Atendimento', 
+    className: 'bg-blue-50 text-blue-800 border-blue-200/80 font-medium', 
+    icon: <User className="h-3 w-3 text-blue-600" /> 
+  },
+  resolvido: { 
+    label: 'Resolvido', 
+    className: 'bg-emerald-50 text-emerald-800 border-emerald-200/80 font-medium', 
+    icon: <CheckCircle className="h-3 w-3 text-emerald-600" /> 
+  },
 };
 
 const priorityConfig: Record<TicketPriority, { label: string; className: string }> = {
-  baixa: { label: 'Baixa', className: 'bg-green-100 text-green-700 border-green-300' },
-  media: { label: 'Média', className: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
-  alta: { label: 'Alta', className: 'bg-red-100 text-red-700 border-red-300' },
-  urgente: { label: 'Urgente', className: 'bg-red-100 text-red-700 border-red-300' },
+  baixa: { label: 'Baixa', className: 'bg-slate-100 text-slate-700 border-slate-200 font-medium' },
+  media: { label: 'Média', className: 'bg-sky-50 text-sky-700 border-sky-200 font-medium' },
+  alta: { label: 'Alta', className: 'bg-amber-50 text-amber-700 border-amber-200 font-medium' },
+  urgente: { label: 'Urgente', className: 'bg-red-50 text-red-700 border-red-200 font-bold' },
 };
 
 export function TicketList({ tickets, isAdmin, onAssign, onStart, onResolve, onDelete }: TicketListProps) {
@@ -86,34 +98,43 @@ export function TicketList({ tickets, isAdmin, onAssign, onStart, onResolve, onD
 
   if (tickets.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
-          Nenhum chamado encontrado.
+      <Card className="shadow-sm border-slate-200/80 bg-white">
+        <CardContent className="py-14 text-center">
+          <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+            <ListChecks className="h-5 w-5" />
+          </div>
+          <p className="text-sm font-semibold text-slate-700">Nenhum chamado encontrado</p>
+          <p className="text-xs text-slate-400 mt-0.5">Novas solicitações aparecerão aqui automaticamente.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="bg-primary/5">
-        <CardTitle className="text-primary flex items-center gap-2">
-          <ListChecks className="h-5 w-5" />
-          {isAdmin ? 'Gerenciar Chamados' : 'Fila de Chamados'}
-        </CardTitle>
+    <Card className="shadow-sm border-slate-200/80 bg-white overflow-hidden">
+      <CardHeader className="bg-slate-50/60 border-b border-slate-100 py-3.5 px-5">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-primary" />
+            {isAdmin ? 'Gerenciamento de Fila & Chamados' : 'Meus Chamados'}
+          </CardTitle>
+          <span className="text-xs text-slate-500 font-medium">
+            {tickets.length} chamado{tickets.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Assunto</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Prioridade</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Analista</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableRow className="bg-slate-50/40 hover:bg-slate-50/40 border-b border-slate-100">
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">ID</TableHead>
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Assunto</TableHead>
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Categoria</TableHead>
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Status</TableHead>
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Prioridade</TableHead>
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Abertura</TableHead>
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3">Responsável</TableHead>
+              <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider py-3 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -123,18 +144,23 @@ export function TicketList({ tickets, isAdmin, onAssign, onStart, onResolve, onD
               const canAssign = selectedAnalista[ticket.id] && selectedPrioridade[ticket.id];
               
               return (
-                <TableRow key={ticket.id}>
-                  <TableCell>
-                    <span className="font-mono text-sm text-muted-foreground">#{ticket.numericId}</span>
+                <TableRow key={ticket.id} className="hover:bg-slate-50/70 transition-colors border-b border-slate-100/80">
+                  <TableCell className="py-3">
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200/60">
+                      #{ticket.numericId}
+                    </span>
                   </TableCell>
-                  <TableCell>
-                    <p className="font-medium">{ticket.assunto}</p>
+                  <TableCell className="py-3">
+                    <p className="font-semibold text-xs text-slate-900 line-clamp-1">{ticket.assunto}</p>
+                    <p className="text-[11px] text-slate-400 line-clamp-1">{ticket.solicitante}</p>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{ticket.categoria}</Badge>
+                  <TableCell className="py-3">
+                    <span className="text-xs font-medium text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/50">
+                      {ticket.categoria}
+                    </span>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={status.variant} className="flex items-center gap-1 w-fit">
+                  <TableCell className="py-3">
+                    <Badge variant="outline" className={`${status.className} text-[10px] flex items-center gap-1.5 w-fit px-2 py-0.5`}>
                       {status.icon}
                       {status.label}
                     </Badge>

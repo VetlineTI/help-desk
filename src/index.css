@@ -2,50 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 200 50% 10%;
+    --background: 210 33% 98.5%;
+    --foreground: 222.2 47.4% 11.2%;
 
     --card: 0 0% 100%;
-    --card-foreground: 200 50% 10%;
+    --card-foreground: 222.2 47.4% 11.2%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 50% 10%;
+    --popover-foreground: 222.2 47.4% 11.2%;
 
-    --primary: 82 53% 56%;
-    --primary-foreground: 195 80% 95%;
+    /* Cor Principal: Azul Petróleo / Teal da Logo Vetline */
+    --primary: 198 62% 33%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 160 40% 92%;
-    --secondary-foreground: 195 80% 25%;
+    /* Cor Secundária / Destaque: Verde Lima da Logo Vetline */
+    --secondary: 88 56% 48%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 200 20% 94%;
-    --muted-foreground: 200 15% 45%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 160 60% 40%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 88 65% 94%;
+    --accent-foreground: 198 62% 28%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 200 20% 88%;
-    --input: 200 20% 88%;
-    --ring: 82 53% 56%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 198 62% 33%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 200 15% 30%;
-    --sidebar-primary: 195 80% 35%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 198 62% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 40% 94%;
-    --sidebar-accent-foreground: 195 80% 25%;
-    --sidebar-border: 200 20% 90%;
-    --sidebar-ring: 195 80% 45%;
+    --sidebar-accent: 88 65% 94%;
+    --sidebar-accent-foreground: 198 62% 28%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 198 62% 33%;
   }
 
   .dark {
@@ -58,32 +56,32 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 198 62% 42%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 88 56% 48%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 198 62% 20%;
+    --accent-foreground: 88 56% 65%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 198 62% 42%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 198 62% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 198 62% 42%;
   }
 }
 
@@ -93,6 +91,51 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: -0.011em;
   }
+}
+
+/* Vetline Brand Utilities */
+.bg-vetline-gradient {
+  background: linear-gradient(135deg, #82c341 0%, #1f6a89 100%);
+}
+
+.bg-vetline-gradient-reverse {
+  background: linear-gradient(135deg, #1f6a89 0%, #82c341 100%);
+}
+
+.bg-vetline-gradient-soft {
+  background: linear-gradient(135deg, rgba(130, 195, 65, 0.12) 0%, rgba(31, 106, 137, 0.12) 100%);
+}
+
+.text-vetline-gradient {
+  background: linear-gradient(135deg, #78b836 0%, #1f6a89 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-vetline {
+  border-color: #82c341;
+}
+
+.vetline-glow {
+  box-shadow: 0 0 25px -5px rgba(130, 195, 65, 0.4), 0 0 15px -5px rgba(31, 106, 137, 0.3);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

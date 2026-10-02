@@ -16,6 +16,7 @@ import { Paperclip, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TicketFormProps {
+  defaultSolicitante?: string;
   onSubmit: (ticket: {
     solicitante: string;
     assunto: string;
@@ -26,8 +27,8 @@ interface TicketFormProps {
   }) => void;
 }
 
-export function TicketForm({ onSubmit }: TicketFormProps) {
-  const [solicitante, setSolicitante] = useState('');
+export function TicketForm({ defaultSolicitante = '', onSubmit }: TicketFormProps) {
+  const [solicitante, setSolicitante] = useState(defaultSolicitante);
   const [assunto, setAssunto] = useState('');
   const [categoria, setCategoria] = useState<TicketCategory | ''>('');
   const [descricao, setDescricao] = useState('');
@@ -90,44 +91,58 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
   };
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader className="bg-primary/5">
-        <CardTitle className="text-primary flex items-center gap-2">
-          <Send className="h-5 w-5" />
-          Abrir Novo Chamado
-        </CardTitle>
+    <Card className="shadow-sm border-slate-200/80 bg-white overflow-hidden">
+      <CardHeader className="bg-slate-50/60 border-b border-slate-100 py-4 px-5">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-vetline-gradient text-white flex items-center justify-center font-bold shadow-sm">
+            <Send className="h-4 w-4" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-bold text-slate-900">Novo Chamado</CardTitle>
+            <p className="text-xs text-slate-500 font-normal">Preencha os detalhes da sua solicitação</p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="pt-6">
+
+      <CardContent className="p-5">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="solicitante">Seu Nome *</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="solicitante" className="text-xs font-semibold text-slate-700">
+              Solicitante <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="solicitante"
-              placeholder="Digite seu nome completo"
+              placeholder="Digite seu nome ou e-mail"
               value={solicitante}
               onChange={(e) => setSolicitante(e.target.value)}
+              className="h-9 text-xs bg-slate-50/40 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="assunto">Assunto *</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="assunto" className="text-xs font-semibold text-slate-700">
+              Assunto <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="assunto"
-              placeholder="Digite o assunto do chamado"
+              placeholder="Resumo breve do problema ou necessidade"
               value={assunto}
               onChange={(e) => setAssunto(e.target.value)}
+              className="h-9 text-xs bg-slate-50/40 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="categoria">Categoria *</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="categoria" className="text-xs font-semibold text-slate-700">
+              Categoria <span className="text-red-500">*</span>
+            </Label>
             <Select value={categoria} onValueChange={(v) => setCategoria(v as TicketCategory)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a categoria" />
+              <SelectTrigger className="h-9 text-xs bg-slate-50/40 border-slate-200 focus:bg-white">
+                <SelectValue placeholder="Selecione a categoria do suporte" />
               </SelectTrigger>
               <SelectContent>
                 {CATEGORIAS.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
+                  <SelectItem key={cat} value={cat} className="text-xs">
                     {cat}
                   </SelectItem>
                 ))}
@@ -135,19 +150,24 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição *</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="descricao" className="text-xs font-semibold text-slate-700">
+              Descrição Detalhada <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="descricao"
-              placeholder="Descreva detalhadamente o problema ou solicitação"
+              placeholder="Explique detalhadamente o ocorrido, mensagens de erro e contexto..."
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               rows={4}
+              className="text-xs bg-slate-50/40 border-slate-200 focus:bg-white transition-colors resize-none"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="anexo">Anexo (opcional)</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="anexo" className="text-xs font-semibold text-slate-700">
+              Anexo ou Captura de Tela (Opcional)
+            </Label>
             <div className="flex items-center gap-2">
               <Input
                 id="anexo"
@@ -159,10 +179,10 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
                 type="button"
                 variant="outline"
                 onClick={() => document.getElementById('anexo')?.click()}
-                className="w-full justify-start"
+                className="w-full justify-start h-9 text-xs font-medium text-slate-600 bg-slate-50/40 hover:bg-slate-100/60 border-dashed border-slate-300"
               >
-                <Paperclip className="mr-2 h-4 w-4" />
-                {anexoNome || 'Selecionar arquivo'}
+                <Paperclip className="mr-2 h-3.5 w-3.5 text-slate-400" />
+                <span className="truncate">{anexoNome || 'Anexar imagem, documento ou PDF (máx. 5MB)'}</span>
               </Button>
               {anexoNome && (
                 <Button
@@ -173,6 +193,7 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
                     setAnexo(undefined);
                     setAnexoNome(undefined);
                   }}
+                  className="h-9 px-2.5 text-xs text-destructive hover:bg-destructive/10"
                 >
                   Remover
                 </Button>
@@ -180,9 +201,9 @@ export function TicketForm({ onSubmit }: TicketFormProps) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
-            <Send className="mr-2 h-4 w-4" />
-            Enviar Chamado
+          <Button type="submit" className="w-full h-10 text-xs font-bold gap-2 shadow-md bg-vetline-gradient hover:opacity-95 text-white border-none transition-all active:scale-[0.99]">
+            <Send className="h-3.5 w-3.5" />
+            Enviar Solicitação
           </Button>
         </form>
       </CardContent>
